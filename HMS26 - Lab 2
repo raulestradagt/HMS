@@ -1,0 +1,40 @@
+import time
+from machine import Pin
+import utime
+import gc   # Para revisar memoria disponible
+
+# LED en GPIO15
+led = Pin(15, Pin.OUT)
+
+# Botón en GPIO14 con resistencia interna PULL_UP (conectado a GND)
+button = Pin(14, Pin.IN, Pin.PULL_UP)
+
+# Variable de estado: 0 = intermitente, 1 = fijo
+estado_led = 0
+
+print("Iniciando programa...")
+
+while True:
+    # Detectar si el botón fue presionado (con debounce)
+    if button.value() == 0:  # presionado = 0
+        utime.sleep_ms(50)   # esperar 50 ms para estabilizar
+        if button.value() == 0:  # confirmar que sigue presionado
+            estado_led = 1 - estado_led  # alternar estado
+            print("Botón presionado -> nuevo estado:", estado_led)
+            # esperar a que se suelte antes de continuar
+            while button.value() == 0:
+                utime.sleep_ms(50)
+
+    # Control del LED según estado
+    if estado_led == 0:
+        # Modo intermitente
+        led.toggle()
+        utime.sleep(0.5)
+    else:
+        # Modo fijo encendido
+        led.value(1)
+        utime.sleep(0.5)
+
+    # Mostrar memoria libre
+    free_mem = gc.mem_free()
+    print("Memoria libre (bytes):", free_mem)
